@@ -21,6 +21,7 @@ import (
 )
 
 var conf Configuration
+var getLogInfoObj GetLogInfoRequest
 
 const LOG_PATH = "resource/test.txt"
 const Conf_PATH = "resource/secret.json"
@@ -36,13 +37,14 @@ type GetLogInfoRequest struct {
 	ServiceId string `json:"Serviceid"`
 }
 
-func main() {
+func init(){
 	conf = loadConfiguration()
-
-	getLogInfoObj := GetLogInfoRequest{
+	getLogInfoObj = GetLogInfoRequest{
 		ServiceId: conf.ServiceId,
 	}
+}
 
+func main() {
 	executePost("https://"+conf.IFT_URL+"/api/v1/serviceManager/getLogInfoRequest", toJsonStr(getLogInfoObj))
 }
 
@@ -64,11 +66,9 @@ func toJsonStr(o GetLogInfoRequest) (string) {
 }
 
 func clientDo() {
-
 	file, _ := os.Open(LOG_PATH)
 	defer file.Close()
 	//md5Str := getMd5FromFile(file)
-
 }
 
 func executePost(url string, data string) {
