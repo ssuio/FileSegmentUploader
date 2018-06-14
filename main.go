@@ -7,7 +7,6 @@ import (
 	"io"
 	"log"
 	"fmt"
-	"github.com/google/uuid"
 	"strings"
 	"time"
 	"encoding/base64"
@@ -18,6 +17,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"encoding/json"
+	"github.com/google/uuid"
 )
 
 var conf Configuration
