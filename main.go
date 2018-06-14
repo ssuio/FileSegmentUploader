@@ -31,6 +31,7 @@ type Configuration struct {
 	API_KEY   string
 	IFT_URL   string
 	GetLogInfoUrl string
+	UploadResumeUrl string
 	ServiceId string
 }
 
@@ -46,7 +47,8 @@ func init(){
 }
 
 func main() {
-	executePost("https://"+conf.IFT_URL+conf.GetLogInfoUrl, toJsonStr(getLogInfoObj))
+	logs := executePost("https://"+conf.IFT_URL+conf.GetLogInfoUrl, toJsonStr(getLogInfoObj))
+	fmt.Println(logs)
 }
 
 func loadConfiguration() Configuration {
@@ -72,7 +74,12 @@ func clientDo() {
 	//md5Str := getMd5FromFile(file)
 }
 
-func executePost(url string, data string) {
+type LogInfo struct{
+	LogRequestId int
+	FileType string
+}
+
+func executePost(url string, data string)([]LogInfo) {
 	req, err := http.NewRequest("POST", url, bytes.NewBufferString(data))
 	headerStr := generateHeader(url, "POST", bytes.NewBufferString(data).Bytes())
 	req.Header.Set("Authorization", headerStr)
@@ -87,11 +94,17 @@ func executePost(url string, data string) {
 		panic(err)
 	}
 	defer resp.Body.Close()
-
-	fmt.Println("response Status:", resp.Status)
-	fmt.Println("response Headers:", resp.Header)
-	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
+	if resp.StatusCode >= 200 {
+		body, _ := ioutil.ReadAll(resp.Body)
+		var retData map[string][]LogInfo
+		json.Unmarshal([]byte(body), &retData)
+		for key, value:= range retData{
+			if key == "Items"{
+				return value
+			}
+		}
+	}
+	return nil
 }
 
 func generateHeader(url string, method string, content []byte) (string) {
