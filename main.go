@@ -30,6 +30,7 @@ type Configuration struct {
 	APPID     string
 	API_KEY   string
 	IFT_URL   string
+	GetLogInfoUrl string
 	ServiceId string
 }
 
@@ -45,7 +46,7 @@ func init(){
 }
 
 func main() {
-	executePost("https://"+conf.IFT_URL+"/api/v1/serviceManager/getLogInfoRequest", toJsonStr(getLogInfoObj))
+	executePost("https://"+conf.IFT_URL+conf.GetLogInfoUrl, toJsonStr(getLogInfoObj))
 }
 
 func loadConfiguration() Configuration {
