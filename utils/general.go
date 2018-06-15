@@ -58,3 +58,8 @@ func LoadConfiguration() Configuration {
 	jsonParser.Decode(&config)
 	return config
 }
+
+func ToJsonStr(o interface{}) (string) {
+	s, _ := json.Marshal(o)
+	return string(s)
+}

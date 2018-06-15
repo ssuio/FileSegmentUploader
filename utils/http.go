@@ -20,8 +20,6 @@ func init(){
 	conf = LoadConfiguration()
 }
 
-
-
 func EncodeUrl(urlStr string) (string) {
 	return strings.ToLower(url.QueryEscape(urlStr))
 }

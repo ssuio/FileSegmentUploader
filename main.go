@@ -3,7 +3,6 @@ package main
 import (
 	"os"
 	"fmt"
-	"encoding/json"
 	"src/utils"
 )
 
@@ -14,7 +13,7 @@ var conf utils.Configuration
 var getLogInfoObj GetLogInfoRequest
 
 func main() {
-	logs := utils.ExecutePost("https://"+conf.IFT_URL+conf.GetLogInfoUrl, toJsonStr(getLogInfoObj))
+	logs := utils.ExecutePost("https://"+conf.IFT_URL+conf.GetLogInfoUrl, utils.ToJsonStr(getLogInfoObj))
 	fmt.Println(logs)
 }
 
@@ -27,11 +26,6 @@ func init() {
 
 type GetLogInfoRequest struct {
 	ServiceId string `json:"Serviceid"`
-}
-
-func toJsonStr(o GetLogInfoRequest) (string) {
-	s, _ := json.Marshal(o)
-	return string(s)
 }
 
 func clientDo() {
