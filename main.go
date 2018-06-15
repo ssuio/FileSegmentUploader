@@ -2,65 +2,31 @@ package main
 
 import (
 	"os"
-	"encoding/hex"
-	"crypto/md5"
-	"io"
-	"log"
 	"fmt"
-	"strings"
-	"time"
-	"encoding/base64"
-	"crypto/hmac"
-	"crypto/sha256"
-	"net/http"
-	"bytes"
-	"io/ioutil"
-	"net/url"
 	"encoding/json"
-	"github.com/google/uuid"
+	"src/utils"
 )
 
-var conf Configuration
-var getLogInfoObj GetLogInfoRequest
 
 const LOG_PATH = "resource/test.txt"
-const Conf_PATH = "resource/secret.json"
 
-type Configuration struct {
-	APPID     string
-	API_KEY   string
-	IFT_URL   string
-	GetLogInfoUrl string
-	UploadResumeUrl string
-	ServiceId string
+var conf utils.Configuration
+var getLogInfoObj GetLogInfoRequest
+
+func main() {
+	logs := utils.ExecutePost("https://"+conf.IFT_URL+conf.GetLogInfoUrl, toJsonStr(getLogInfoObj))
+	fmt.Println(logs)
 }
 
-type GetLogInfoRequest struct {
-	ServiceId string `json:"Serviceid"`
-}
-
-func init(){
-	conf = loadConfiguration()
+func init() {
+	conf = utils.LoadConfiguration()
 	getLogInfoObj = GetLogInfoRequest{
 		ServiceId: conf.ServiceId,
 	}
 }
 
-func main() {
-	logs := executePost("https://"+conf.IFT_URL+conf.GetLogInfoUrl, toJsonStr(getLogInfoObj))
-	fmt.Println(logs)
-}
-
-func loadConfiguration() Configuration {
-	var config Configuration
-	configFile, err := os.Open(Conf_PATH)
-	defer configFile.Close()
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	jsonParser := json.NewDecoder(configFile)
-	jsonParser.Decode(&config)
-	return config
+type GetLogInfoRequest struct {
+	ServiceId string `json:"Serviceid"`
 }
 
 func toJsonStr(o GetLogInfoRequest) (string) {
@@ -72,85 +38,4 @@ func clientDo() {
 	file, _ := os.Open(LOG_PATH)
 	defer file.Close()
 	//md5Str := getMd5FromFile(file)
-}
-
-type LogInfo struct{
-	LogRequestId int
-	FileType string
-}
-
-func executePost(url string, data string)([]LogInfo) {
-	req, err := http.NewRequest("POST", url, bytes.NewBufferString(data))
-	headerStr := generateHeader(url, "POST", bytes.NewBufferString(data).Bytes())
-	req.Header.Set("Authorization", headerStr)
-	req.Header.Set("content-type", "application/json")
-	if err != nil {
-		panic(err)
-	}
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		panic(err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 200 {
-		body, _ := ioutil.ReadAll(resp.Body)
-		var retData map[string][]LogInfo
-		json.Unmarshal([]byte(body), &retData)
-		for key, value:= range retData{
-			if key == "Items"{
-				return value
-			}
-		}
-	}
-	return nil
-}
-
-func generateHeader(url string, method string, content []byte) (string) {
-	timestamp := string(getTimestamp())
-	nonce := getUUID()
-	url = encodeUrl(url)
-
-	contentMd5 := getMd5FromBytes(content)
-	contentRes := base64.StdEncoding.EncodeToString(contentMd5)
-
-	sigRaw := conf.APPID + method + url + timestamp + nonce + contentRes
-
-	secretKeyByteArr, err := base64.StdEncoding.DecodeString(conf.API_KEY)
-	if err != nil {
-		log.Fatal("decode API key failed.", err)
-	}
-	mac := hmac.New(sha256.New, secretKeyByteArr)
-	mac.Write([]byte(sigRaw))
-	sigRes := base64.StdEncoding.EncodeToString(mac.Sum(nil))
-
-	authStr := conf.APPID + ":" + sigRes + ":" + nonce + ":" + timestamp
-	return "icss " + authStr
-}
-
-func getMd5FromFile(file *os.File) (result string) {
-	h := md5.New()
-	if _, err := io.Copy(h, file); err != nil {
-		log.Fatal(err)
-	}
-	return hex.EncodeToString(h.Sum(nil))
-}
-
-func getMd5FromBytes(b []byte) (result []byte) {
-	h := md5.New()
-	h.Write(b)
-	return h.Sum(nil)
-}
-
-func getUUID() (uuidStr string) {
-	return strings.Replace(uuid.New().String(), "-", "", -1)
-}
-
-func getTimestamp() (timestamp int64) {
-	return time.Now().Unix()
-}
-
-func encodeUrl(urlStr string) (string) {
-	return strings.ToLower(url.QueryEscape(urlStr))
 }
