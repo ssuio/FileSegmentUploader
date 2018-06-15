@@ -7,7 +7,7 @@ import (
 )
 
 func GetLogInfo(reqStr string)([]model.LogInfo){
-	retBytes := utils.ExecutePost("https://"+utils.Conf.IFT_URL+utils.Conf.GetLogInfoUrl, reqStr)
+	retBytes := utils.RequestPost("https://"+utils.Conf.IFT_URL+utils.Conf.GetLogInfoUrl, reqStr)
 	var retData map[string][]model.LogInfo
 	json.Unmarshal(retBytes, &retData)
 	for key, value:= range retData{

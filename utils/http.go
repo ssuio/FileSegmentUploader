@@ -22,9 +22,13 @@ func EncodeUrl(urlStr string) (string) {
 	return strings.ToLower(url.QueryEscape(urlStr))
 }
 
-func ExecutePost(url string, data string) ([]byte) {
-	req, err := http.NewRequest("POST", url, bytes.NewBufferString(data))
-	headerStr := generateHeader(url, "POST", bytes.NewBufferString(data).Bytes())
+func RequestPost(url string, data string) ([]byte) {
+	return request("POST", url, data)
+}
+
+func request(method string, url string, data string) ([]byte) {
+	req, err := http.NewRequest(method, url, bytes.NewBufferString(data))
+	headerStr := generateHeader(url, method, bytes.NewBufferString(data).Bytes())
 	req.Header.Set("Authorization", headerStr)
 	req.Header.Set("content-type", "application/json")
 	if err != nil {
