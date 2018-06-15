@@ -4,6 +4,7 @@ import (
 	"os"
 	"fmt"
 	"src/utils"
+	"src/api"
 )
 
 
@@ -13,7 +14,7 @@ var conf utils.Configuration
 var getLogInfoObj GetLogInfoRequest
 
 func main() {
-	logs := utils.ExecutePost("https://"+conf.IFT_URL+conf.GetLogInfoUrl, utils.ToJsonStr(getLogInfoObj))
+	logs := api.GetLogInfo(utils.ToJsonStr(getLogInfoObj))
 	fmt.Println(logs)
 }
 

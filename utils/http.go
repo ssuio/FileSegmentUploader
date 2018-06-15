@@ -10,21 +10,19 @@ import (
 	"net/http"
 	"bytes"
 	"io/ioutil"
-	"encoding/json"
-	"src/model"
 )
 
-var conf Configuration
+var Conf Configuration
 
-func init(){
-	conf = LoadConfiguration()
+func init() {
+	Conf = LoadConfiguration()
 }
 
 func EncodeUrl(urlStr string) (string) {
 	return strings.ToLower(url.QueryEscape(urlStr))
 }
 
-func ExecutePost(url string, data string)([]model.LogInfo) {
+func ExecutePost(url string, data string) ([]byte) {
 	req, err := http.NewRequest("POST", url, bytes.NewBufferString(data))
 	headerStr := generateHeader(url, "POST", bytes.NewBufferString(data).Bytes())
 	req.Header.Set("Authorization", headerStr)
@@ -41,13 +39,7 @@ func ExecutePost(url string, data string)([]model.LogInfo) {
 	defer resp.Body.Close()
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
 		body, _ := ioutil.ReadAll(resp.Body)
-		var retData map[string][]model.LogInfo
-		json.Unmarshal([]byte(body), &retData)
-		for key, value:= range retData{
-			if key == "Items"{
-				return value
-			}
-		}
+		return body
 	}
 	return nil
 }
@@ -60,9 +52,9 @@ func generateHeader(url string, method string, content []byte) (string) {
 	contentMd5 := GetMd5FromBytes(content)
 	contentRes := base64.StdEncoding.EncodeToString(contentMd5)
 
-	sigRaw := conf.APPID + method + url + timestamp + nonce + contentRes
+	sigRaw := Conf.APPID + method + url + timestamp + nonce + contentRes
 
-	secretKeyByteArr, err := base64.StdEncoding.DecodeString(conf.API_KEY)
+	secretKeyByteArr, err := base64.StdEncoding.DecodeString(Conf.API_KEY)
 	if err != nil {
 		log.Fatal("decode API key failed.", err)
 	}
@@ -70,6 +62,6 @@ func generateHeader(url string, method string, content []byte) (string) {
 	mac.Write([]byte(sigRaw))
 	sigRes := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 
-	authStr := conf.APPID + ":" + sigRes + ":" + nonce + ":" + timestamp
+	authStr := Conf.APPID + ":" + sigRes + ":" + nonce + ":" + timestamp
 	return "icss " + authStr
 }
